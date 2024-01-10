@@ -34,24 +34,24 @@ param2default = {
     'document_sequence_rule': 'massed',
 
     'sentence_repetitions_per_document': 0,
-    'sentence_sequence_rule': 'random',
+    'sentence_sequence_rule': 'massed',
 
     'word_order_rule': 'fixed',
     'include_punctuation': True,
 
-    'window_size': None,
+    'window_size': 3,
     'embedding_size': 0,
-    'hidden_layer_info_list': (('lstm', 16),),
+    'hidden_layer_info_list': (('mlp', 32),),
     'weight_init': 0.0001,
     'sequence_length': 1,
     'criterion': 'cross_entropy',
 
-    'num_epochs': 2000,
+    'num_epochs': 500,
     'optimizer': 'adagrad',
-    'learning_rate': 0.005,
+    'learning_rate': 0.05,
     'batch_size': 1,
 
-    'evaluation_layer': 1,
+    'evaluation_layer': 'output',
     'sequence_list': None,
 
     'eval_freq': 10,
@@ -63,6 +63,6 @@ param2default = {
     'run_classifier_task': True,
     'classifier_hidden_sizes': (),
     'test_proportion': .1,
-    'classifier_epochs': 10,
+    'classifier_epochs': 20,
     'classifier_lr': .01
 }
