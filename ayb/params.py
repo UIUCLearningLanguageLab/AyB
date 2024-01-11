@@ -39,11 +39,11 @@ param2default = {
     'word_order_rule': 'fixed',
     'include_punctuation': True,
 
-    'window_size': 3,
-    'embedding_size': 0,
-    'hidden_layer_info_list': (('mlp', 32),),
+    'window_size': None,
+    'embedding_size': 12,
+    'hidden_layer_info_list': (('gpt', 8, 1, 16),),
     'weight_init': 0.0001,
-    'sequence_length': 1,
+    'sequence_length': 5,
     'criterion': 'cross_entropy',
 
     'num_epochs': 500,
@@ -55,6 +55,8 @@ param2default = {
     'sequence_list': None,
 
     'eval_freq': 10,
+    'save_path': 'models/',
+    'save_freq': 100,
 
     'run_cohyponym_task': True,
     'num_thresholds': 51,

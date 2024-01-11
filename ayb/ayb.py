@@ -1,4 +1,6 @@
 import time
+import os
+from datetime import datetime
 import torch
 from distributional_models.corpora.xAyBz import XAYBZ
 from distributional_models.tasks.categories import Categories
@@ -7,6 +9,7 @@ from distributional_models.tasks.classifier import classify
 from distributional_models.models.srn import SRN
 from distributional_models.models.lstm import LSTM
 from distributional_models.models.mlp import MLP
+from distributional_models.models.gpt import GPT
 
 
 def main():
@@ -15,7 +18,6 @@ def main():
 
 
 def ayb(param2val):
-
     the_corpus = create_ayb_corpus(param2val)
     the_categories = init_categories(the_corpus.word_category_dict)
     the_model = init_model(the_corpus,
@@ -24,10 +26,42 @@ def ayb(param2val):
                            param2val['hidden_layer_info_list'],
                            param2val['weight_init'],
                            param2val['device'])
-
+    fix_paths(param2val, "local", the_model)
+    prep_output(param2val)
     performance_dict = train_model(the_corpus, the_model, the_categories, param2val)
     # performance_dict = {}
     return performance_dict
+
+
+def fix_paths(train_params, run_location, model):
+
+    if run_location == 'local':
+        train_params['save_path'] = "../" + train_params['save_path']  # "models/"
+
+    elif run_location == 'ludwig_local':
+        pass
+
+    elif run_location == 'ludwig_cluster':
+        pass
+        # TODO fix save_path for ludwig so it ends up in the same runs folder
+
+    else:
+        raise ValueError(f"Unrecognized run location {run_location}")
+
+    train_params['save_path'] += f"{model.model_type}"
+    train_params['save_path'] += f"_{model.vocab_size}"
+    train_params['save_path'] += f"_{model.embedding_size}"
+    train_params['save_path'] += f"_{model.hidden_size}"
+
+    now = datetime.now()
+    date_time_string = now.strftime("%Y%m%d_%H%M%S")
+    train_params['save_path'] += f"_{date_time_string}"
+
+    return train_params
+
+
+def prep_output(train_params):
+    os.mkdir(train_params['save_path'])
 
 
 def init_categories(category_dict):
@@ -45,7 +79,7 @@ def create_ayb_corpus(param2val):
     return the_corpus
 
 
-def init_model(corpus, block_size, embedding_size, hidden_layer_info_list, weight_init, device):
+def init_model(corpus, sequence_length, embedding_size, hidden_layer_info_list, weight_init, device):
     if hidden_layer_info_list[0][0] == 'lstm':
         hidden_size = hidden_layer_info_list[0][1]
         model = LSTM(corpus, embedding_size, hidden_size, weight_init, device)
@@ -55,6 +89,13 @@ def init_model(corpus, block_size, embedding_size, hidden_layer_info_list, weigh
     elif hidden_layer_info_list[0][0] == 'mlp':
         hidden_size = hidden_layer_info_list[0][1]
         model = MLP(corpus, embedding_size, hidden_size, weight_init, device)
+    elif hidden_layer_info_list[0][0] == 'gpt':
+        attention_size = hidden_layer_info_list[0][1]
+        num_heads = hidden_layer_info_list[0][2]
+        hidden_size = hidden_layer_info_list[0][3]
+        block_size = sequence_length - 1
+        model = GPT(corpus, block_size, embedding_size, num_heads, attention_size,
+                    hidden_size, weight_init, device)
     else:
         raise ValueError(f"Unrecognized model type {hidden_layer_info_list[0][0]}")
     return model
@@ -119,17 +160,15 @@ def prepare_batches(document_list, corpus, model, train_params):
                                                                                corpus.unknown_token,
                                                                                window_size=train_params['window_size'])
 
-    index_list = corpus.x_list + [corpus.y_list[-1]]
+    sequence_list = corpus.create_sequence_lists(corpus.index_list, train_params['sequence_length'], pad_index=0)
 
-    sequence_list = corpus.create_sequence_lists(index_list, train_params['sequence_length'], pad_index=0)
-
-    x_batches, y_batches = corpus.create_batches(sequence_list, train_params['batch_size'],
-                                                 train_params['sequence_length'], 0)
+    x_batches, y_batches, y_window_batches = corpus.create_batches(sequence_list, train_params['batch_size'],
+                                                                   train_params['sequence_length'], 0)
 
     x_batches = [torch.tensor(x_batch, dtype=torch.long).to(model.device) for x_batch in x_batches]
     y_batches = [torch.tensor(y_batch, dtype=torch.long).to(model.device) for y_batch in y_batches]
 
-    return x_batches, y_batches
+    return x_batches, y_batches, y_window_batches
 
 
 def evaluate_model(i, model, the_categories, corpus, train_params, training_took, loss_sum, tokens_sum):
@@ -186,11 +225,11 @@ def train_model(corpus, model, the_categories, train_params):
         start_time = time.time()
         # TODO corpus document shuffling
 
-        x_batches, y_batches = prepare_batches(corpus.document_list, corpus, model, train_params)
+        x_batches, y_batches, y_window_batches = prepare_batches(corpus.document_list, corpus, model, train_params)
 
         model.init_network(train_params['batch_size'], train_params['sequence_length'])
 
-        for x_batch, y_batch in zip(x_batches, y_batches):
+        for x_batch, y_batch in zip(x_batches, y_window_batches):
             model.optimizer.zero_grad()
             output = model(x_batch)
 
@@ -215,6 +254,9 @@ def train_model(corpus, model, the_categories, train_params):
             evaluate_model(i, model, the_categories, corpus, train_params, training_took, loss_sum, tokens_sum)
             loss_sum = 0
             tokens_sum = 0
+
+        if i % train_params['save_freq'] == 0:
+            model.save_model(train_params['save_path'] + f"/e{i}.pth")
 
     return performance_dict
 
