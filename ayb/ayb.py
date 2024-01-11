@@ -167,6 +167,7 @@ def prepare_batches(document_list, corpus, model, train_params):
 
     x_batches = [torch.tensor(x_batch, dtype=torch.long).to(model.device) for x_batch in x_batches]
     y_batches = [torch.tensor(y_batch, dtype=torch.long).to(model.device) for y_batch in y_batches]
+    y_window_batches = [torch.tensor(y_window_batch, dtype=torch.long).to(model.device) for y_window_batch in y_window_batches]
 
     return x_batches, y_batches, y_window_batches
 
@@ -225,11 +226,15 @@ def train_model(corpus, model, the_categories, train_params):
         start_time = time.time()
         # TODO corpus document shuffling
 
-        x_batches, y_batches, y_window_batches = prepare_batches(corpus.document_list, corpus, model, train_params)
+        x_batches, single_y_batches, y_window_batches = prepare_batches(corpus.document_list, corpus, model, train_params)
+        if model.model_type == 'gpt':
+            y_batches = y_window_batches
+        else:
+            y_batches = single_y_batches
 
         model.init_network(train_params['batch_size'], train_params['sequence_length'])
 
-        for x_batch, y_batch in zip(x_batches, y_window_batches):
+        for x_batch, y_batch in zip(x_batches, y_batches):
             model.optimizer.zero_grad()
             output = model(x_batch)
 
