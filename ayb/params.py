@@ -11,15 +11,16 @@ param2requests = {
 }
 
 param2default = {
+    # General Params
     'random_seed': None,
-
     'device': 'cpu',
 
-    'num_AB_categories': 2,
-    'AB_category_size': 3,
+    # Corpus Params
+    'num_AB_categories': 16,
+    'AB_category_size': 64,
 
     'x_category_size': 0,
-    'y_category_size': 3,
+    'y_category_size': 32,
     'z_category_size': 0,
 
     'min_x_per_sentence': 0,
@@ -34,37 +35,65 @@ param2default = {
     'document_sequence_rule': 'massed',
 
     'sentence_repetitions_per_document': 0,
-    'sentence_sequence_rule': 'massed',
+    'sentence_sequence_rule': 'random',
 
     'word_order_rule': 'fixed',
     'include_punctuation': True,
 
-    'window_size': None,
-    'embedding_size': 12,
-    'hidden_layer_info_list': (('gpt', 8, 1, 16),),
+    # Model Params
+    'model_type': 'transformer',
     'weight_init': 0.0001,
-    'sequence_length': 5,
-    'criterion': 'cross_entropy',
+    'save_path': 'models/',
+    'save_freq': 100,
+    'sequence_length': 8,
 
+    # SRN & LSTM Params
+    'rnn_embedding_size': 0,
+    'rnn_hidden_size': 12,
+
+    # W2V Params
+    'w2v_embedding_size': 12,
+    'w2v_hidden_size': 12,
+    'corpus_window_size': 4,
+
+    # Transformer params
+    'transformer_embedding_size': 32,
+    'transformer_num_heads': 4,
+    'transformer_attention_size': 8,
+    # 'transformer_num_layers': 3,
+    'transformer_hidden_size': 16,
+    'transformer_target_output': 'single_y',
+
+    # Training Params
     'num_epochs': 500,
-    'optimizer': 'adagrad',
-    'learning_rate': 0.05,
-    'batch_size': 1,
+    'criterion': 'cross_entropy',
+    'optimizer': 'adamW',
+    'learning_rate': 0.001,
+    'batch_size': 64,
+    'dropout_rate': 0.0,
+    'l1_lambda': 0.0,
+    'weight_decay': 0.0,
 
+    # evaluation params
+    'eval_freq': 10,
     'evaluation_layer': 'output',
     'sequence_list': None,
 
-    'eval_freq': 10,
-    'save_path': 'models/',
-    'save_freq': 100,
-
+    # cohyponym task params
     'run_cohyponym_task': True,
-    'num_thresholds': 51,
+    'cohyponym_similarity_metric': 'correlation',
+    'cohyponym_num_thresholds': 51,
+    'cohyponym_only_best_thresholds': True,
 
-    'num_classifiers': 100,
+    # classifier task params
     'run_classifier_task': True,
+    'num_classifiers': 1,
     'classifier_hidden_sizes': (),
-    'test_proportion': .1,
-    'classifier_epochs': 20,
-    'classifier_lr': .01
+    'classifier_num_folds': 10,
+    'classifier_num_epochs': 30,
+    'classifier_learning_rate': .05,
+    'classifier_batch_size': 1,
+    'classifier_criterion': 'cross_entropy',
+    'classifier_optimizer': 'adam',
+    'classifier_device': 'cpu'
 }
