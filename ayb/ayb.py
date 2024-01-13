@@ -6,10 +6,10 @@ from distributional_models.scripts.evaluate_model import evaluate_model
 
 def main():
     import params
-    ayb(params.param2default, "local")
+    run_ayb(params.param2default, "local")
 
 
-def ayb(param2val, run_location):
+def run_ayb(param2val, run_location):
 
     if run_location == 'local':
         param2val['save_path'] = "../" + param2val['save_path']  # "models/"

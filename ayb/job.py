@@ -1,11 +1,12 @@
 import pandas as pd
-from ayb import ayb
+from ayb import run_ayb
 
 
 def main(param2val):
     """This function is run by Ludwig on remote workers."""
+    location = "ludwig_local"
 
-    performance = ayb(param2val)
+    performance = run_ayb(param2val, location)
     print(performance)
 
     series_list = []
