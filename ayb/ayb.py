@@ -24,14 +24,16 @@ def run_ayb(param2val, run_location):
     the_categories = Categories()
     the_categories.create_from_instance_category_dict(the_corpus.word_category_dict)
 
-    # create the model
-    the_model = create_model(the_corpus.vocab_size, param2val)
+    test_sequence = [['A1_1', 'y1', 'B1_2', '.']]
 
-    performance_dict = train_model(the_corpus, the_model, the_categories, param2val)
+    # create the model
+    the_model = create_model(the_corpus.vocab_list, param2val)
+
+    performance_dict = train_model(param2val, the_corpus, the_model, the_categories, test_sequence)
     return performance_dict
 
 
-def train_model(corpus, model, the_categories, train_params):
+def train_model(train_params, corpus, model, the_categories, test_sequence):
     performance_dict = {}
     took_sum = 0
 
@@ -43,8 +45,10 @@ def train_model(corpus, model, the_categories, train_params):
         if i % train_params['eval_freq'] == 0:
             took_mean = took_sum / train_params['eval_freq']
             took_sum = 0
-            output_string = evaluate_model(i, model, the_categories, corpus, train_params, took_mean, loss_mean)
-            print(output_string)
+
+            evaluation_dict = evaluate_model(i, model, corpus, train_params, took_mean, loss_mean,
+                                             the_categories, test_sequence)
+            print(evaluation_dict['output_string'])
 
         if i % train_params['save_freq'] == 0:
             file_name = f"e{i}.pth"

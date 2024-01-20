@@ -16,11 +16,11 @@ param2default = {
     'device': 'cpu',
 
     # Corpus Params
-    'num_AB_categories': 16,
-    'AB_category_size': 64,
+    'num_AB_categories': 2,
+    'AB_category_size': 3,
 
     'x_category_size': 0,
-    'y_category_size': 32,
+    'y_category_size': 3,
     'z_category_size': 0,
 
     'min_x_per_sentence': 0,
@@ -35,21 +35,21 @@ param2default = {
     'document_sequence_rule': 'massed',
 
     'sentence_repetitions_per_document': 0,
-    'sentence_sequence_rule': 'random',
+    'sentence_sequence_rule': 'massed',
 
     'word_order_rule': 'fixed',
     'include_punctuation': True,
 
     # Model Params
-    'model_type': 'transformer',
+    'model_type': 'lstm',
     'weight_init': 0.0001,
     'save_path': 'models/',
     'save_freq': 100,
-    'sequence_length': 8,
+    'sequence_length': 1,
 
     # SRN & LSTM Params
     'rnn_embedding_size': 0,
-    'rnn_hidden_size': 12,
+    'rnn_hidden_size': 8,
 
     # W2V Params
     'w2v_embedding_size': 12,
@@ -95,5 +95,14 @@ param2default = {
     'classifier_batch_size': 1,
     'classifier_criterion': 'cross_entropy',
     'classifier_optimizer': 'adam',
-    'classifier_device': 'cpu'
+    'classifier_device': 'cpu',
+
+    # generate sequence task params
+    'generate_sequence': True,
+    'prime_token_list': ('A1_1', 'y1'),
+    'generate_sequence_length': 8,
+    'generate_temperature': 1.0,
+
+    # predict sequences task params
+    'predict_sequences': True
 }
