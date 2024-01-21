@@ -69,7 +69,7 @@ param2default = {
     'criterion': 'cross_entropy',
     'optimizer': 'adamW',
     'learning_rate': 0.001,
-    'batch_size': 64,
+    'batch_size': 1,
     'dropout_rate': 0.0,
     'l1_lambda': 0.0,
     'weight_decay': 0.0,
