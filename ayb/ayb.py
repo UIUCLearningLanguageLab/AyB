@@ -110,24 +110,17 @@ def evaluate_model(label, model, training_corpus, test_corpus, train_params, tra
                                                            token_category_dict=the_categories.instance_category_dict,
                                                            target_category_index_dict=test_corpus.target_category_index_dict)
             evaluation_dict['sequence_predictions'] = the_sequence_predictions
-            output_string += f" SeqPred:{the_sequence_predictions.sequence_prediction_accuracy_mean:0.3f}"
+
+            accuracy_mean_dict = calculate_paradigmatic_accuracy(the_sequence_predictions.output_activation_mean_matrix,
+                                                                 the_sequence_predictions.token_category_index_dict,
+                                                                 the_sequence_predictions.target_category_index_dict)
+
+            output_string += f"   SeqPred:{accuracy_mean_dict['y_present_b']:0.3f}"
+            output_string += f"-{accuracy_mean_dict['y_legal_b']:0.3f}"
+            output_string += f"-{accuracy_mean_dict['y_omitted_b']:0.3f}"
+            output_string += f"-{accuracy_mean_dict['y_illegal_b']:0.3f}"
+            output_string += f"-{accuracy_mean_dict['y_other']:0.3f}"
             took_string += f"-{the_sequence_predictions.took:0.2f}"
-
-
-            # sequence_target_label_list = corpus.assign_category_index_to_token(test_sequence_list)
-            # print("corpus target_category_index dict", corpus.target_category_index_dict)
-            # the_sequence_predictions = SequencePredictions(model,
-            #                                                test_sequence_list,
-            #                                                sequence_target_label_list=sequence_target_label_list,
-            #                                                token_category_dict=corpus.word_category_dict,
-            #                                                target_category_index_dict=corpus.target_category_index_dict)
-            # evaluation_dict['sequence_predictions'] = the_sequence_predictions
-            # output_string += f" SeqPred:{the_sequence_predictions.sequence_prediction_accuracy_mean:0.3f}"
-            # took_string += f"-{the_sequence_predictions.took:0.2f}"
-
-
-
-
 
     if train_params['generate_sequence']:
         generated_sequence = generate_sequence(model,
@@ -139,6 +132,44 @@ def evaluate_model(label, model, training_corpus, test_corpus, train_params, tra
     evaluation_dict['output_string'] = output_string + took_string
 
     return evaluation_dict
+
+
+def calculate_paradigmatic_accuracy(activation_matrix, row_dict, column_dict):
+
+    period_present_a = activation_matrix[row_dict['.'], column_dict['Present A']]
+    period_legal_a = activation_matrix[row_dict['.'], column_dict['Legal A']]
+    period_omitted_a = activation_matrix[row_dict['.'], column_dict['Omitted A']]
+    period_illegal_a = activation_matrix[row_dict['.'], column_dict['Illegal A']]
+    period_other = 1 - period_present_a - period_legal_a - period_omitted_a - period_illegal_a
+
+    # TODO this needs to be made into a loop that automatically determines how many A's there are instead of hardcoding
+    a_y = activation_matrix[row_dict['A1'], column_dict['y']] + activation_matrix[row_dict['A2'], column_dict['y']]
+    a_other = 1 - a_y
+    b_period = activation_matrix[row_dict['B1'], column_dict['Period']] + activation_matrix[row_dict['B2'], column_dict['Period']]
+    b_other = 1 - b_period
+
+    y_present_b = activation_matrix[row_dict['y'], column_dict['Present B']]
+    y_legal_b = activation_matrix[row_dict['y'], column_dict['Legal B']]
+    y_omitted_b = activation_matrix[row_dict['y'], column_dict['Omitted B']]
+    y_illegal_b = activation_matrix[row_dict['y'], column_dict['Illegal B']]
+    y_other = 1 - y_present_b - y_legal_b - y_omitted_b - y_illegal_b
+
+    accuracy_mean_dict = {'period_present_a': period_present_a,
+                          'period_legal_a': period_legal_a,
+                          'period_omitted_a': period_omitted_a,
+                          'period_illegal_a': period_illegal_a,
+                          'period_other': period_other,
+                          'a_y': a_y,
+                          'a_other': a_other,
+                          'y_present_b': y_present_b,
+                          'y_legal_b': y_legal_b,
+                          'y_omitted_b': y_omitted_b,
+                          'y_illegal_b': y_illegal_b,
+                          'y_other': y_other,
+                          'b_period': b_period,
+                          'b_other': b_other}
+
+    return accuracy_mean_dict
 
 
 if __name__ == "__main__":
