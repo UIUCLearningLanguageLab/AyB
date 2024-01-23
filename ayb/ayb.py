@@ -111,7 +111,7 @@ def evaluate_model(label, model, training_corpus, test_corpus, train_params, tra
                                                            target_category_index_dict=test_corpus.target_category_index_dict)
             evaluation_dict['sequence_predictions'] = the_sequence_predictions
 
-            accuracy_mean_dict = calculate_paradigmatic_accuracy(the_sequence_predictions.output_activation_mean_matrix,
+            accuracy_mean_dict = calculate_syntagmatic_accuracy(the_sequence_predictions.output_activation_mean_matrix,
                                                                  the_sequence_predictions.token_category_index_dict,
                                                                  the_sequence_predictions.target_category_index_dict)
 
@@ -134,7 +134,7 @@ def evaluate_model(label, model, training_corpus, test_corpus, train_params, tra
     return evaluation_dict
 
 
-def calculate_paradigmatic_accuracy(activation_matrix, row_dict, column_dict):
+def calculate_syntagmatic_accuracy(activation_matrix, row_dict, column_dict):
 
     period_present_a = activation_matrix[row_dict['.'], column_dict['Present A']]
     period_legal_a = activation_matrix[row_dict['.'], column_dict['Legal A']]
