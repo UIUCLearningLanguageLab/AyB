@@ -49,7 +49,7 @@ param2default = {
 
     # SRN & LSTM Params
     'rnn_embedding_size': 0,
-    'rnn_hidden_size': 8,
+    'rnn_hidden_size': 16,
 
     # W2V Params
     'w2v_embedding_size': 12,
@@ -75,7 +75,7 @@ param2default = {
     'weight_decay': 0.0,
 
     # evaluation params
-    'eval_freq': 10,
+    'eval_freq': 20,
     'evaluation_layer': 'output',
     'sequence_list': None,
 
@@ -100,7 +100,7 @@ param2default = {
     # generate sequence task params
     'generate_sequence': True,
     'prime_token_list': ('A1_1', 'y1'),
-    'generate_sequence_length': 8,
+    'generate_sequence_length': 4,
     'generate_temperature': 1.0,
 
     # predict sequences task params
