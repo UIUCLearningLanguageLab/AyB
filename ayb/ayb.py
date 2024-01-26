@@ -15,11 +15,13 @@ def run_ayb(param2val, run_location):
 
     # create the corpus
     training_corpus = XAYBZ(sentence_sequence_rule=param2val['sentence_sequence_rule'],
-                            random_seed=param2val['random_seed'])
+                            random_seed=param2val['random_seed'],
+                            num_omitted_ab_pairs=param2val['num_omitted_ab_pairs'])
     missing_training_words = training_corpus.create_vocab()
 
     test_corpus = XAYBZ(sentence_sequence_rule='massed',
-                        random_seed=param2val['random_seed'])
+                        random_seed=param2val['random_seed'],
+                        num_omitted_ab_pairs=param2val['num_omitted_ab_pairs'])
     missing_test_words = test_corpus.create_vocab()
 
     if training_corpus.vocab_list != test_corpus.vocab_list:

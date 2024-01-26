@@ -18,6 +18,7 @@ param2default = {
     # Corpus Params
     'num_AB_categories': 2,
     'AB_category_size': 3,
+    'num_omitted_ab_pairs': 2,
 
     'x_category_size': 0,
     'y_category_size': 3,
