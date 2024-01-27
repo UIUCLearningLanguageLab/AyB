@@ -43,7 +43,7 @@ param2default = {
 
     # Model Params
     'model_type': 'lstm',
-    'weight_init': 0.0001,
+    'weight_init': 0.001,
     'save_path': 'models/',
     'save_freq': 100,
     'sequence_length': 1,
@@ -66,7 +66,7 @@ param2default = {
     'transformer_target_output': 'single_y',
 
     # Training Params
-    'num_epochs': 500,
+    'num_epochs': 5000,
     'criterion': 'cross_entropy',
     'optimizer': 'adamW',
     'learning_rate': 0.001,
@@ -81,13 +81,13 @@ param2default = {
     'sequence_list': None,
 
     # cohyponym task params
-    'run_cohyponym_task': True,
+    'run_cohyponym_task': False,
     'cohyponym_similarity_metric': 'correlation',
     'cohyponym_num_thresholds': 51,
     'cohyponym_only_best_thresholds': True,
 
     # classifier task params
-    'run_classifier_task': True,
+    'run_classifier_task': False,
     'num_classifiers': 1,
     'classifier_hidden_sizes': (),
     'classifier_num_folds': 10,
@@ -99,14 +99,14 @@ param2default = {
     'classifier_device': 'cpu',
 
     # generate sequence task params
-    'generate_sequence': True,
+    'generate_sequence': False,
     'prime_token_list': ('A1_1', 'y1'),
     'generate_sequence_length': 4,
     'generate_temperature': 1.0,
 
     # predict sequences task params
-    'predict_sequences': True,
+    'predict_sequences': False,
 
     # compare similarities task
-    'compare_similarities': True
+    'compare_similarities': False
 }

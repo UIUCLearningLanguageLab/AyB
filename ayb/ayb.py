@@ -1,3 +1,5 @@
+import copy
+
 from distributional_models.corpora.xAyBz import XAYBZ
 from distributional_models.scripts.create_model import create_model
 from src.evaluate import evaluate_model
@@ -21,12 +23,13 @@ def run_ayb(param2val, run_location):
                             num_omitted_ab_pairs=param2val['num_omitted_ab_pairs'])
     missing_training_words = training_corpus.create_vocab()
 
-    test_corpus = XAYBZ(sentence_sequence_rule='massed',
-                        random_seed=param2val['random_seed'],
-                        ab_category_size=param2val['ab_category_size'],
-                        num_ab_categories=param2val['num_ab_categories'],
-                        num_omitted_ab_pairs=param2val['num_omitted_ab_pairs'])
-    missing_test_words = test_corpus.create_vocab()
+    test_corpus = copy.deepcopy(training_corpus)
+    # test_corpus = XAYBZ(sentence_sequence_rule='massed',
+    #                     random_seed=param2val['random_seed'],
+    #                     ab_category_size=param2val['ab_category_size'],
+    #                     num_ab_categories=param2val['num_ab_categories'],
+    #                     num_omitted_ab_pairs=param2val['num_omitted_ab_pairs'])
+    # missing_test_words = test_corpus.create_vocab()
 
     if training_corpus.vocab_list != test_corpus.vocab_list:
         raise Exception("Training and Test Vocab Lists are not the same")
