@@ -16,9 +16,9 @@ param2default = {
     'device': 'cpu',
 
     # Corpus Params
-    'num_AB_categories': 2,
-    'AB_category_size': 3,
-    'num_omitted_ab_pairs': 2,
+    'num_ab_categories': 2,
+    'ab_category_size': 3,
+    'num_omitted_ab_pairs': 1,
 
     'x_category_size': 0,
     'y_category_size': 3,
@@ -105,5 +105,8 @@ param2default = {
     'generate_temperature': 1.0,
 
     # predict sequences task params
-    'predict_sequences': True
+    'predict_sequences': True,
+
+    # compare similarities task
+    'compare_similarities': True
 }

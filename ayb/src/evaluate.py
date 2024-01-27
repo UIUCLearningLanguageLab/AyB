@@ -4,6 +4,7 @@ from distributional_models.tasks.sequence_predictions import SequencePredictions
 from distributional_models.tasks.generate import generate_sequence
 from distributional_models.tasks.categories import Categories
 from distributional_models.tasks.sequence_categories import SequenceCategories
+from distributional_models.tasks.similarity_matrices import SimilarityMatrices
 
 
 def calculate_syntagmatic_activation(activation_matrix, row_dict, column_dict):
@@ -104,6 +105,16 @@ def evaluate_model(label, model, training_corpus, test_corpus, train_params, tra
             output_string += f"-{accuracy_mean_dict['y_illegal_b']:0.3f}"
             output_string += f"-{accuracy_mean_dict['y_other']:0.3f}"
             took_string += f"-{the_sequence_predictions.took:0.2f}"
+
+    if train_params['compare_similarities']:
+        token_category_dict = training_corpus.create_word_category_dict(model.vocab_index_dict)
+        token_categories = Categories(instance_category_dict=token_category_dict)
+        test_corpus.create_token_target_category_lists()
+        the_sim_matrices = SimilarityMatrices(weight_matrix,
+                                              test_corpus.vocab_index_dict,
+                                              instance_categories=token_categories,
+                                              instance_target_category_list_dict=test_corpus.token_target_category_list_dict)
+        evaluation_dict['similarity_matrices'] = the_sim_matrices
 
     if train_params['generate_sequence']:
         generated_sequence = generate_sequence(model,
