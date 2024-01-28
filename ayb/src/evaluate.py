@@ -51,7 +51,7 @@ def calculate_syntagmatic_activation(activation_matrix, row_labels, column_label
 
 def evaluate_model(label, model, training_corpus, test_corpus, train_params, training_took, loss_mean):
 
-    evaluation_dict = {}
+    evaluation_dict = {'label': label}
 
     output_string = f"{label:8}  loss:{loss_mean:<7.4f}"
     took_string = f"  Took:{training_took:0.2f}"

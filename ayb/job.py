@@ -1,5 +1,5 @@
 import pandas as pd
-from ayb import run_ayb
+from .ayb import run_ayb
 
 
 def main(param2val):

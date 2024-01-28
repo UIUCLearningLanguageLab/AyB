@@ -1,13 +1,23 @@
-"""
-use only dictionaries to store parameters.
-ludwig works on dictionaries and any custom class would force potentially unwanted logic on user.
-using non-standard classes here would also make it harder for user to understand.
-any custom classes for parameters should be implemented by user in main job function only.
-keep interface between user and ludwig as simple as possible
-"""
-
-# will submit 3*2=6 jobs, each using a different learning rate and "configuration"
 param2requests = {
+    'model_type': ['transformer'],
+    'sequence_length': [4],
+    'batch_size': [1],
+    'learning_rate': [0.001],
+    'transformer_embedding_size': [32],
+    'transformer_num_heads': [4],
+    'transformer_attention_size': [8],
+    'transformer_hidden_size': [16],
+    'num_epochs': [100],
+    'eval_freq': [10],
+    'num_models': [3],
+
+    # 'model_type': ['lstm'],
+    # 'rnn_embedding_size': [0],
+    # 'rnn_hidden_size': [16],
+    # 'learning_rate': [0.025],
+    # 'sequence_length': [4],
+    # 'batch_size': [1],
+
 }
 
 param2default = {
@@ -47,6 +57,7 @@ param2default = {
     'save_path': 'models/',
     'save_freq': 100,
     'sequence_length': 1,
+    'num_models': 5,
 
     # SRN & LSTM Params
     'rnn_embedding_size': 0,
@@ -68,8 +79,8 @@ param2default = {
     # Training Params
     'num_epochs': 5000,
     'criterion': 'cross_entropy',
-    'optimizer': 'adamW',
-    'learning_rate': 0.001,
+    'optimizer': 'sgd',
+    'learning_rate': 0.01,
     'batch_size': 1,
     'dropout_rate': 0.0,
     'l1_lambda': 0.0,
@@ -102,11 +113,11 @@ param2default = {
     'generate_sequence': False,
     'prime_token_list': ('A1_1', 'y1'),
     'generate_sequence_length': 4,
-    'generate_temperature': 1.0,
+    'generate_temperature': .01,
 
     # predict sequences task params
-    'predict_sequences': False,
+    'predict_sequences': True,
 
     # compare similarities task
-    'compare_similarities': False
+    'compare_similarities': True
 }
