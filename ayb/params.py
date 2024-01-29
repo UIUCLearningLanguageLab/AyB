@@ -1,23 +1,23 @@
 param2requests = {
-    'model_type': ['transformer'],
-    'sequence_length': [4],
-    'batch_size': [1],
-    'learning_rate': [0.001],
-    'transformer_embedding_size': [32],
-    'transformer_num_heads': [4],
-    'transformer_attention_size': [8],
-    'transformer_hidden_size': [16],
-    'num_epochs': [100],
-    'eval_freq': [10],
-    'num_models': [3],
+    'num_epochs': [500],
+    'eval_freq': [5],
+    'num_models': [20],
 
-    # 'model_type': ['lstm'],
-    # 'rnn_embedding_size': [0],
-    # 'rnn_hidden_size': [16],
-    # 'learning_rate': [0.025],
+    # 'model_type': ['transformer'],
     # 'sequence_length': [4],
     # 'batch_size': [1],
+    # 'learning_rate': [0.001],
+    # 'transformer_embedding_size': [32],
+    # 'transformer_num_heads': [4],
+    # 'transformer_attention_size': [8],
+    # 'transformer_hidden_size': [16],
 
+    'model_type': ['lstm'],
+    'rnn_embedding_size': [0],
+    'rnn_hidden_size': [16],
+    'learning_rate': [0.025],
+    'sequence_length': [4],
+    'batch_size': [1],
 }
 
 param2default = {

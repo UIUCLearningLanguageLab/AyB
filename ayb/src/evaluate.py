@@ -8,47 +8,6 @@ from distributional_models.tasks.similarity_matrices import SimilarityMatrices
 import copy
 
 
-def calculate_syntagmatic_activation(activation_matrix, row_labels, column_labels):
-
-    activation_mean_dict = {}
-
-    # SequencePredictions.print_matrix(activation_matrix, row_labels, column_labels)
-
-    # period_present_a = activation_matrix[row_dict['.'], column_dict['A_Present']]
-    # period_legal_a = activation_matrix[row_dict['.'], column_dict['A_Legal']]
-    # period_omitted_a = activation_matrix[row_dict['.'], column_dict['A_Omitted']]
-    # period_illegal_a = activation_matrix[row_dict['.'], column_dict['A_Illegal']]
-    # period_other = 1 - period_present_a - period_legal_a - period_omitted_a - period_illegal_a
-    #
-    # a_y = activation_matrix[row_dict['A'], column_dict['y']] + activation_matrix[row_dict['A'], column_dict['y']]
-    # a_other = 1 - a_y
-    # b_period = activation_matrix[row_dict['B'], column_dict['.']] + activation_matrix[row_dict['B'], column_dict['.']]
-    # b_other = 1 - b_period
-    #
-    # y_present_b = activation_matrix[row_dict['y'], column_dict['B_Present']]
-    # y_legal_b = activation_matrix[row_dict['y'], column_dict['B_Legal']]
-    # y_omitted_b = activation_matrix[row_dict['y'], column_dict['B_Omitted']]
-    # y_illegal_b = activation_matrix[row_dict['y'], column_dict['B_Illegal']]
-    # y_other = 1 - y_present_b - y_legal_b - y_omitted_b - y_illegal_b
-    #
-    # accuracy_mean_dict = {'period_present_a': period_present_a,
-    #                       'period_legal_a': period_legal_a,
-    #                       'period_omitted_a': period_omitted_a,
-    #                       'period_illegal_a': period_illegal_a,
-    #                       'period_other': period_other,
-    #                       'a_y': a_y,
-    #                       'a_other': a_other,
-    #                       'y_present_b': y_present_b,
-    #                       'y_legal_b': y_legal_b,
-    #                       'y_omitted_b': y_omitted_b,
-    #                       'y_illegal_b': y_illegal_b,
-    #                       'y_other': y_other,
-    #                       'b_period': b_period,
-    #                       'b_other': b_other}
-
-    return activation_mean_dict
-
-
 def evaluate_model(label, model, training_corpus, test_corpus, train_params, training_took, loss_mean):
 
     evaluation_dict = {'label': label}
@@ -69,7 +28,8 @@ def evaluate_model(label, model, training_corpus, test_corpus, train_params, tra
                                             similarity_metric=train_params['cohyponym_similarity_metric'],
                                             only_best_threshold=train_params['cohyponym_only_best_thresholds'])
             evaluation_dict['cohyponyms'] = the_cohyponym_task
-            output_string += f" BA:{the_cohyponym_task.balanced_accuracy_mean:0.3f}-R:{the_cohyponym_task.correlation:0.3f}"
+            output_string += \
+                f" BA:{the_cohyponym_task.balanced_accuracy_mean:0.3f}-R:{the_cohyponym_task.correlation:0.3f}"
             took_string += f"-{the_cohyponym_task.took:0.2f}"
 
     if 'run_classifier_task' in train_params:
@@ -117,16 +77,6 @@ def evaluate_model(label, model, training_corpus, test_corpus, train_params, tra
                                                            token_categories=token_categories,
                                                            target_categories=target_categories)
             evaluation_dict['sequence_predictions'] = the_sequence_predictions
-
-            activation_mean_dict = calculate_syntagmatic_activation(the_sequence_predictions.output_activation_mean_matrix,
-                                                                  the_sequence_predictions.token_category_list,
-                                                                  the_sequence_predictions.target_category_list)
-
-            # output_string += f"   SeqPred:{activation_mean_dict['y_present_b']:0.3f}"
-            # output_string += f"-{activation_mean_dict['y_legal_b']:0.3f}"
-            # output_string += f"-{activation_mean_dict['y_omitted_b']:0.3f}"
-            # output_string += f"-{activation_mean_dict['y_illegal_b']:0.3f}"
-            # output_string += f"-{activation_mean_dict['y_other']:0.3f}"
             took_string += f"-{the_sequence_predictions.took:0.2f}"
 
     if train_params['compare_similarities']:
@@ -156,7 +106,3 @@ def evaluate_model(label, model, training_corpus, test_corpus, train_params, tra
     evaluation_dict['output_string'] = output_string + took_string
 
     return evaluation_dict
-
-
-def calculate_categorized_similarities(model, token_category_dict, token_target_category_dict):
-    pass
