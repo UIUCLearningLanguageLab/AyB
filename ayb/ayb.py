@@ -5,7 +5,7 @@ from distributional_models.scripts.visualization import plot_time_series
 from distributional_models.corpora.xAyBz import XAYBZ
 from distributional_models.scripts.create_model import create_model
 from ayb.src.evaluate import evaluate_model
-from distributional_models.scripts.utils import conf_interval
+import numpy as np
 
 
 def main():
@@ -122,11 +122,14 @@ def plot_data(model_name, sequence_prediction_df, category_similarity_df):
         'A_Legal': ('Ay-->Legal A', '#13294B', 2, 'dashed'),
         'A_Omitted': ('Ay-->Omitted A', '#13294B', 2, 'dashdot'),
         'A_Illegal': ('Ay-->Illegal A', '#13294B', 2, 'dotted'),
-        'B_Present': ('Ay-->Legal B', '#C84113', 3, 'solid'),
-        'B_Legal': ('Ay-->Present B', '#C84113', 2, 'dashed'),
+        'B_Present': ('Ay-->Present B', '#C84113', 3, 'solid'),
+        'B_Legal': ('Ay-->Legal B', '#C84113', 2, 'dashed'),
         'B_Omitted': ('Ay-->Omitted B', '#C84113', 2, 'dashdot'),
         'B_Illegal': ('Ay-->Illegal B', '#C84113', 2, 'dotted'),
     }
+
+    def standard_error(series):
+        return np.std(series, ddof=1) / np.sqrt(len(series))
 
     title = f"{model_name} Output Activation"
     y_label = "Output Activation"
@@ -134,7 +137,7 @@ def plot_data(model_name, sequence_prediction_df, category_similarity_df):
     sequence_prediction_df_grouped = sequence_prediction_df.groupby(['model_type', 'epoch', 'token_category', 'target_category'])
     mean_sequence_prediction_df = sequence_prediction_df_grouped.agg(
         mean_output_activation_mean=('mean_output_activation', 'mean'),
-        mean_output_activation_CI=('mean_output_activation', 'std')).reset_index()
+        mean_output_activation_CI=('mean_output_activation', standard_error)).reset_index()
     plot_time_series(mean_sequence_prediction_df,
                      ['target_category'],
                      'mean_output_activation_mean',
@@ -146,7 +149,7 @@ def plot_data(model_name, sequence_prediction_df, category_similarity_df):
     line_props = {
         'A, A_Legal': ('A <-> Legal A', '#13294B', 2, 'dashed'),
         'A, A_Illegal': ('A <-> Illegal A', '#13294B', 2, 'dotted'),
-        'B, B_Legal': ('A <-> Legal A', '#C84113', 2, 'dashed'),
+        'B, B_Legal': ('B <-> Legal B', '#C84113', 2, 'dashed'),
         'B, B_Illegal': ('B <-> Illegal B', '#C84113', 2, 'dotted'),
         'A, B_Legal': ('A/B <-> Legal B/A', '#000000', 2, 'dashed'),
         'A, B_Omitted': ('A/B <-> Omitted B/A', '#000000', 2, 'dashdot'),
