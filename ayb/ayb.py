@@ -1,10 +1,13 @@
 import copy
 import os
+import random
+
 import pandas as pd
 from distributional_models.scripts.visualization import plot_time_series
 from distributional_models.corpora.xAyBz import XAYBZ
 from distributional_models.scripts.create_model import create_model
 from ayb.src.evaluate import evaluate_model
+# from src.evaluate import evaluate_model
 import numpy as np
 
 
@@ -38,9 +41,10 @@ def run_ayb(param2val, run_location):
         the_model = create_model(training_corpus.vocab_list, param2val)
         performance_dict, evaluation_dict_list = train_model(param2val, the_model, training_corpus, test_corpus)
         model_evaluation_list.append(evaluation_dict_list)
+        print(i)
 
-    sequence_prediction_df, category_similarity_df = save_data(param2val, model_evaluation_list)
-    plot_data(the_model.model_name, sequence_prediction_df, category_similarity_df)
+    sequence_prediction_df, input_category_similarity_df, output_category_similarity_df = save_data(param2val, model_evaluation_list)
+    plot_data(param2val, the_model.model_type, sequence_prediction_df, input_category_similarity_df, output_category_similarity_df)
 
     return performance_dict
 
@@ -49,9 +53,20 @@ def train_model(train_params, model, training_corpus, test_corpus):
     performance_dict = {}
     took_sum = 0
     evaluation_dict_list = []
+    training_documents = None
 
-    for i in range(train_params['num_epochs']):
-        loss_mean, took = model.train_sequence(training_corpus, training_corpus.document_list, train_params)
+    for i in range(train_params['num_epochs']+1):
+        if train_params['sentence_sequence_rule'] == 'random':
+            temp_document_list = copy.deepcopy(training_corpus.document_list)
+            for document in temp_document_list:
+                random.shuffle(document)
+            training_documents = temp_document_list
+        elif train_params['sentence_sequence_rule'] == 'massed':
+            training_documents = copy.deepcopy(training_corpus.document_list)
+        else:
+            raise Exception(f'invalid sentence_sequence_rule: {train_params["sentence_sequence_rule"]}')
+
+        loss_mean, took = model.train_sequence(training_corpus, training_documents, train_params)
         took_sum += took
 
         if i % train_params['eval_freq'] == 0:
@@ -73,10 +88,13 @@ def save_data(params, evaluation_dict_list):
 
     sequence_prediction_header_list = ['model_type', 'model_num', 'epoch', 'token_category', 'target_category',
                                        'mean_output_activation', 'sum_output_activation']
-    category_similarity_header_list = ['model_type', 'model_num', 'epoch', 'token_category', 'target_category',
-                                       'category_similarity']
+    input_category_similarity_header_list = ['model_type', 'model_num', 'epoch', 'token_category', 'target_category',
+                                            'category_similarity']
+    output_category_similarity_header_list = ['model_type', 'model_num', 'epoch', 'token_category', 'target_category',
+                                             'category_similarity']
     sequence_prediction_data_list = []
-    category_similarity_data_list = []
+    input_category_similarity_data_list = []
+    output_category_similarity_data_list = []
 
     for i, model_evaluation_dict_list in enumerate(evaluation_dict_list):
         for j, evaluation_dict in enumerate(model_evaluation_dict_list):
@@ -91,32 +109,58 @@ def save_data(params, evaluation_dict_list):
                     mean_activation = sequence_predictions.output_activation_mean_matrix[k, l]
                     sequence_prediction_data_list.append([model_type, model_num, epoch, token_category, target_category, mean_activation, sum_activation])
 
-            similarity_matrices = evaluation_dict['similarity_matrices']
+            similarity_matrices = evaluation_dict['input_similarity_matrices']
             for k, instance_category in enumerate(similarity_matrices.instance_category_list):
                 for l, target_category in enumerate(similarity_matrices.target_category_list):
                     category_similarity = similarity_matrices.category_similarity_matrix[k, l]
-                    category_similarity_data_list.append([model_type, model_num, epoch, instance_category, target_category, category_similarity])
+                    input_category_similarity_data_list.append([model_type, model_num, epoch, instance_category, target_category, category_similarity])
+
+            similarity_matrices = evaluation_dict['output_similarity_matrices']
+            for k, instance_category in enumerate(similarity_matrices.instance_category_list):
+                for l, target_category in enumerate(similarity_matrices.target_category_list):
+                    category_similarity = similarity_matrices.category_similarity_matrix[k, l]
+                    output_category_similarity_data_list.append(
+                        [model_type, model_num, epoch, instance_category, target_category, category_similarity])
 
     sequence_prediction_df = pd.DataFrame(sequence_prediction_data_list,
                                           columns=sequence_prediction_header_list)
     sequence_prediction_df = sequence_prediction_df.round(5)
     sequence_prediction_df.to_csv(os.path.join(params['save_path'], "sequence_predictions.csv"))
 
-    category_similarity_df = pd.DataFrame(category_similarity_data_list, columns=category_similarity_header_list)
-    category_similarity_df = category_similarity_df.dropna()
-    category_similarity_df = category_similarity_df.round(5)
-    category_similarity_df.to_csv(os.path.join(params['save_path'], "category_similarity.csv"))
+    input_category_similarity_df = pd.DataFrame(input_category_similarity_data_list, columns=input_category_similarity_header_list)
+    input_category_similarity_df = input_category_similarity_df.dropna()
+    input_category_similarity_df = input_category_similarity_df.round(5)
+    input_category_similarity_df.to_csv(os.path.join(params['save_path'], "category_similarity.csv"))
+
+    output_category_similarity_df = pd.DataFrame(output_category_similarity_data_list, columns=output_category_similarity_header_list)
+    output_category_similarity_df = output_category_similarity_df.dropna()
+    output_category_similarity_df = output_category_similarity_df.round(5)
+    output_category_similarity_df.to_csv(os.path.join(params['save_path'], "category_similarity.csv"))
 
     pd.set_option('display.max_rows', None)
     pd.set_option('display.max_columns', None)
     pd.set_option('display.width', None)
 
-    return sequence_prediction_df, category_similarity_df
+    return sequence_prediction_df, input_category_similarity_df, output_category_similarity_df
 
 
-def plot_data(model_name, sequence_prediction_df, category_similarity_df):
-    model_name = model_name[:-16]
+def plot_data(params, model_type, sequence_prediction_df, input_category_similarity_df, output_category_similarity_df):
+    if model_type == 'mlp':
+        model_name = 'W2V'
+    elif model_type == 'transformer':
+        model_name = 'Transformer'
+    else:
+        model_name = model_type.upper()
 
+    # if model_name == 'w2v':
+    #     line_props = {
+    #         'B_Present': ('A-->Present B', '#C84113', 3, 'solid'),
+    #         'B_Legal': ('A-->Legal B', '#C84113', 2, 'dashed'),
+    #         'B_Omitted': ('A-->Omitted B', '#C84113', 2, 'dashdot'),
+    #         'B_Illegal': ('A-->Illegal B', '#C84113', 2, 'dotted'),
+    #         'y': ('Ay-->y', '#13294B', 2, 'solid'),
+    #     }
+    # else:
     line_props = {
         'A_Present': ('Ay-->Present A', '#13294B', 2, 'solid'),
         'A_Legal': ('Ay-->Legal A', '#13294B', 2, 'dashed'),
@@ -126,6 +170,7 @@ def plot_data(model_name, sequence_prediction_df, category_similarity_df):
         'B_Legal': ('Ay-->Legal B', '#C84113', 2, 'dashed'),
         'B_Omitted': ('Ay-->Omitted B', '#C84113', 2, 'dashdot'),
         'B_Illegal': ('Ay-->Illegal B', '#C84113', 2, 'dotted'),
+        'y': ('Ay-->y', '#13294B', 2, 'solid'),
     }
 
     def standard_error(series):
@@ -144,7 +189,9 @@ def plot_data(model_name, sequence_prediction_df, category_similarity_df):
                      'mean_output_activation_CI',
                      title,
                      y_label,
-                     line_props)
+                     (0, 1),
+                     line_props,
+                     os.path.join(params['save_path'], title + ' num_omit ' + str(params['num_omitted_ab_pairs']) + '.png'))
 
     line_props = {
         'A, A_Legal': ('A <-> Legal A', '#13294B', 2, 'dashed'),
@@ -155,20 +202,39 @@ def plot_data(model_name, sequence_prediction_df, category_similarity_df):
         'A, B_Omitted': ('A/B <-> Omitted B/A', '#000000', 2, 'dashdot'),
         'A, B_Illegal': ('A/B <-> Illegal B/A', '#000000', 2, 'dotted'),
     }
-    title = f"{model_name} Output Embedding Similarity"
-    y_label = "Output Embedding Similarity"
-    category_similarity_grouped = category_similarity_df.groupby(
+    title = f"{model_name} Input Embedding Similarity"
+    y_label = "Input Embedding Similarity"
+    input_category_similarity_grouped = input_category_similarity_df.groupby(
         ['model_type', 'epoch', 'token_category', 'target_category'])
-    category_similarity_df = category_similarity_grouped.agg(
+    input_category_similarity_df = input_category_similarity_grouped.agg(
         mean_similarity_mean=('category_similarity', 'mean'),
         mean_similarity_CI=('category_similarity', 'std')).reset_index()
-    plot_time_series(category_similarity_df,
+    plot_time_series(input_category_similarity_df,
                      ['token_category', 'target_category'],
                      'mean_similarity_mean',
                      'mean_similarity_CI',
                      title,
                      y_label,
-                     line_props)
+                     (-1, 1),
+                     line_props,
+                     os.path.join(params['save_path'], title+' num_omit ' + str(params['num_omitted_ab_pairs']) + '.png'))
+
+    title = f"{model_name} Output Embedding Similarity"
+    y_label = "Output Embedding Similarity"
+    output_category_similarity_grouped = output_category_similarity_df.groupby(
+        ['model_type', 'epoch', 'token_category', 'target_category'])
+    output_category_similarity_df = output_category_similarity_grouped.agg(
+        mean_similarity_mean=('category_similarity', 'mean'),
+        mean_similarity_CI=('category_similarity', 'std')).reset_index()
+    plot_time_series(output_category_similarity_df,
+                     ['token_category', 'target_category'],
+                     'mean_similarity_mean',
+                     'mean_similarity_CI',
+                     title,
+                     y_label,
+                     (-1, 1),
+                     line_props,
+                     os.path.join(params['save_path'], title + ' num_omit ' + str(params['num_omitted_ab_pairs']) + '.png'))
 
 
 if __name__ == "__main__":

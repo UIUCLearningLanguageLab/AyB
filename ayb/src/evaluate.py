@@ -16,12 +16,15 @@ def evaluate_model(label, model, training_corpus, test_corpus, train_params, tra
     took_string = f"  Took:{training_took:0.2f}"
 
     # TODO this doesnt implement evaluation using hidden states
-    weight_matrix = model.get_weights(train_params['evaluation_layer'])
+    input_weight_matrix = model.get_weights(train_params['evaluation_layer'][0])
+    output_weight_matrix = model.get_weights(train_params['evaluation_layer'][1])
+
+
 
     if 'run_cohyponym_task' in train_params:
         paradigmatic_category_dict = test_corpus.create_word_category_dict(model.vocab_index_dict)
         paradigmatic_categories = Categories(instance_category_dict=paradigmatic_category_dict)
-        paradigmatic_categories.set_instance_feature_matrix(weight_matrix, test_corpus.vocab_index_dict)
+        paradigmatic_categories.set_instance_feature_matrix(output_weight_matrix, test_corpus.vocab_index_dict)
         if train_params['run_cohyponym_task']:
             the_cohyponym_task = Cohyponyms(paradigmatic_categories,
                                             num_thresholds=train_params['cohyponym_num_thresholds'],
@@ -35,7 +38,7 @@ def evaluate_model(label, model, training_corpus, test_corpus, train_params, tra
     if 'run_classifier_task' in train_params:
         paradigmatic_category_dict = test_corpus.create_word_category_dict(model.vocab_index_dict)
         paradigmatic_categories = Categories(instance_category_dict=paradigmatic_category_dict)
-        paradigmatic_categories.set_instance_feature_matrix(weight_matrix, test_corpus.vocab_index_dict)
+        paradigmatic_categories.set_instance_feature_matrix(output_weight_matrix, test_corpus.vocab_index_dict)
         if train_params['run_classifier_task']:
             the_classifier = Classifier(paradigmatic_categories, train_params)
             evaluation_dict['classifier'] = the_classifier
@@ -48,7 +51,7 @@ def evaluate_model(label, model, training_corpus, test_corpus, train_params, tra
         if train_params['predict_sequences']:
             token_category_dict = training_corpus.create_word_category_dict(model.vocab_index_dict)
             token_categories = Categories(instance_category_dict=token_category_dict)
-            token_categories.set_instance_feature_matrix(weight_matrix, training_corpus.vocab_index_dict)
+            token_categories.set_instance_feature_matrix(output_weight_matrix, training_corpus.vocab_index_dict)
 
             document_category_lists = test_corpus.assign_categories_to_token_target_sequences(test_corpus.document_list)
             target_categories = SequenceCategories(test_corpus.document_list,
@@ -56,21 +59,33 @@ def evaluate_model(label, model, training_corpus, test_corpus, train_params, tra
                                                    document_category_lists)
 
             token_list = copy.deepcopy(model.vocab_list)
-            remove_list = []
+            token_remove_list = []
             for token in token_list:
-                if token[0] != 'y':
-                    remove_list.append(token)
-            for item in remove_list:
+                if model.model_type == 'mlp':
+                    if token[0] != 'A':
+                        token_remove_list.append(token)
+                else:
+                    if token[0] != 'y':
+                        token_remove_list.append(token)
+            for item in token_remove_list:
                 while item in token_list:
                     token_list.remove(item)
 
             target_list = copy.deepcopy(model.vocab_list)
-            remove_list = ['<unk>', 'y1', 'y2', 'y3', '.']
-            for item in remove_list:
+            target_remove_list = []
+            # if model.model_type == 'mlp':
+            #     for token in target_list:
+            #         if token[0] == 'A':
+            #             target_remove_list.append(token)
+            # else:
+            target_remove_list = ['y1', 'y2', 'y3']
+            target_remove_list.extend(['<unk>', '.'])
+            for item in target_remove_list:
                 while item in target_list:
                     target_list.remove(item)
 
             the_sequence_predictions = SequencePredictions(model,
+                                                           train_params,
                                                            test_corpus.document_list,
                                                            token_list=token_list,
                                                            target_list=target_list,
@@ -89,12 +104,32 @@ def evaluate_model(label, model, training_corpus, test_corpus, train_params, tra
             while item in instance_list:
                 instance_list.remove(item)
 
-        the_sim_matrices = SimilarityMatrices(weight_matrix,
+        the_sim_matrices = SimilarityMatrices(output_weight_matrix,
                                               test_corpus.vocab_index_dict,
                                               instance_list=instance_list,
                                               instance_categories=token_categories,
                                               instance_target_category_list_dict=test_corpus.token_target_category_list_dict)
-        evaluation_dict['similarity_matrices'] = the_sim_matrices
+        evaluation_dict['output_similarity_matrices'] = the_sim_matrices
+
+    # change the parameter of evaluation layer to input
+    # To include the evaluation layer in title
+
+    if train_params['compare_similarities']:
+        token_category_dict = training_corpus.create_word_category_dict(model.vocab_index_dict)
+        token_categories = Categories(instance_category_dict=token_category_dict)
+        test_corpus.assign_categories_to_token_targets()
+        instance_list = copy.deepcopy(model.vocab_list)
+        remove_list = ['<unk>', 'y1', 'y2', 'y3', '.']
+        for item in remove_list:
+            while item in instance_list:
+                instance_list.remove(item)
+
+        the_sim_matrices = SimilarityMatrices(input_weight_matrix,
+                                              test_corpus.vocab_index_dict,
+                                              instance_list=instance_list,
+                                              instance_categories=token_categories,
+                                              instance_target_category_list_dict=test_corpus.token_target_category_list_dict)
+        evaluation_dict['input_similarity_matrices'] = the_sim_matrices
 
     if train_params['generate_sequence']:
         generated_sequence = generate_sequence(model,
