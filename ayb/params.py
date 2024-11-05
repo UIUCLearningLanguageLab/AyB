@@ -1,9 +1,11 @@
 param2requests = {
-    'num_epochs': [2000],
-    'eval_freq': [10],
-    'num_models': [20],
+    'num_epochs': [1],
+    'eval_freq': [1],
+    # 'save_freq': [1],
+    'num_models': [1],
     'sentence_sequence_rule': ['random'],
     'num_omitted_ab_pairs': [1],
+    'activation_function': ['tanh'],
     # 'optimizer': ['sgd'],
 
 
@@ -12,55 +14,73 @@ param2requests = {
     #     Omit      random/massed    hidden_size      learning rate     epochs
     #      1            random        16/1/16/4           0.00075         2000
     #      0            random        16/1/16/4           0.00025         2000
+    # 0.0005
 
-
-    # 'model_type': ['transformer'],
-    # 'sequence_length': [4],
-    # 'batch_size': [1],
-    # 'learning_rate': [0.0005],
-    # 'transformer_embedding_size': [16],
-    # 'transformer_num_heads': [1],
-    # 'transformer_attention_size': [16],
-    # 'transformer_hidden_size': [4],
-
+    'model_type': ['transformer'],
+    'sequence_length': [4],
+    'batch_size': [1],
+    'learning_rate': [0.0005],
+    'transformer_embedding_size': [4],
+    'transformer_num_heads': [2],
+    'transformer_attention_size': [4],
+    'transformer_hidden_size': [4],
+    'weight_decay': [0.0],
+    'momentum': [0.0],
 
     # Params combination works for W2V
     #     Omit      random/massed    hidden_size      learning rate     epochs
     #      1            random           16               0.025          200
     #      0            random           16               0.025          200
+    #      0            random           03               0.025          100
+    #      0            random           04               0.001          100
 
     # W2V Params
     # 'model_type': ['w2v'],
     # 'w2v_embedding_size': [0],
-    # 'w2v_hidden_size': [16],
-    # 'corpus_window_size': [2],
-    # 'learning_rate': [0.025],
+    # 'w2v_hidden_size': [4],
+    # 'corpus_window_size': [4],
+    # 'corpus_window_direction': ['forward'],
+    # 'learning_rate': [0.001],
     # 'sequence_length': [1],
     # 'batch_size': [1],
+    # 'weight_decay': [0],
 
     # Params combination works for SRN
     #     Omit      random/massed    hidden_size      learning rate     epochs
-    #      1            random           16               0.0005         2000
-    #      0            random           16               0.0001         2000
-
-    'model_type': ['srn'],
-    'rnn_embedding_size': [0],
-    'rnn_hidden_size': [16],
-    'learning_rate': [0.0005],
-    'sequence_length': [4],
-    'batch_size': [1],
+    #      1            random           16           0.0005 AdamW       2000
+    #      0            random           16           0.0001 AdamW       2000
+    #      0            random           6, 5         0.0001 AdamW       2000
+    #      0            random           16           0.005  sgd         1000
+    #      0            random           12           0.0005/0m sgd      1000
+    #      0            random           8            0.005/0m sgd,0.8,0.5      1000
+    #      0            random           8            0.005/0m sgd,0.8,0.5      1000
+    #      0            random           4            0.0005/0m sgd,0.8,0.5     10000
+    #      0            random           4            0.001 AdamW        2000
+    # 'model_type': ['srn'],
+    # 'rnn_embedding_size': [0],
+    # 'rnn_hidden_size': [4],
+    # 'learning_rate': [0.00075],
+    # 'sequence_length': [4],
+    # 'batch_size': [1],
+    # # 'weight_init_hidden': [0.8],
+    # # 'weight_init_linear': [0.5],
+    # 'weight_decay': [0],
+    # 'momentum': [0]
 
     # Params combination works for LSTM
     #     Omit      random/massed    hidden_size      learning rate     epochs
-    #      1            random           16               0.00025?        2000
+    #      1            random           16               0.00025?       2000
     #      0            random           16               0.0001         2000
-
+    #      0            random           8                0.0002         1000/5
+    #      0            random           5                0.005          2000
+    #      0            random           4                0.001          2000
     # 'model_type': ['lstm'],
     # 'rnn_embedding_size': [0],
-    # 'rnn_hidden_size': [16],
-    # 'learning_rate': [0.0001],
+    # 'rnn_hidden_size': [4],
+    # 'learning_rate': [0.001],
     # 'sequence_length': [4],
     # 'batch_size': [1],
+    # 'weight_decay': [0],
 }
 
 param2default = {
@@ -94,23 +114,30 @@ param2default = {
     'word_order_rule': 'fixed',
     'include_punctuation': True,
 
+    'unknown_token': '<unk>',
+
     # Model Params
-    'model_type': 'w2v',
-    'weight_init': 0.001,
+    'model_type': 'srn',
+    'gain': 1.0,
+    'weight_init_hidden': 0,
+    'weight_init_linear': 0,
+    'momentum': 0,
     'save_path': 'models/',
     'save_freq': 100,
     'sequence_length': 1,
-    'num_models': 5,
+    'num_models': 1,
     'reset_hidden': True,
 
     # SRN & LSTM Params
     'rnn_embedding_size': 0,
-    'rnn_hidden_size': 16,
+    'rnn_hidden_size': 4,
+
 
     # W2V Params
     'w2v_embedding_size': 0,
     'w2v_hidden_size': 12,
     'corpus_window_size': 2,
+    'corpus_window_direction': 'both',
 
     # Transformer params
     'transformer_embedding_size': 32,
@@ -121,14 +148,15 @@ param2default = {
     'transformer_target_output': 'single_y',
 
     # Training Params
-    'num_epochs': 5000,
+    'num_epochs': 10,
     'criterion': 'cross_entropy',
     'optimizer': 'adamW',
-    'learning_rate': 0.01,
+    'activation_function': 'tanh',
+    'learning_rate': 0.0005,
     'batch_size': 1,
     'dropout_rate': 0.0,
     'l1_lambda': 0.0,
-    'weight_decay': 0.0,
+    'weight_decay': 0.2,
 
     # evaluation params
     'eval_freq': 1,
@@ -157,11 +185,14 @@ param2default = {
     'generate_sequence': False,
     'prime_token_list': ('A1_1', 'y1'),
     'generate_sequence_length': 4,
-    'generate_temperature': .01,
+    'generate_temperature': 0.8,
 
     # predict sequences task params
     'predict_sequences': True,
 
     # compare similarities task
-    'compare_similarities': True
+    'compare_similarities': True,
+
+    # evaluate states task
+    'evaluate_states': False
 }

@@ -5,8 +5,15 @@
 prodiff/distributional_models/
 input_data/childes.csv
 input_data/childes.csv.zip
-runs/
+ayb/AdamW_no_omit_runs/runs/
 models/
+bad_runs/
+runs/
+ayb/AdamW_no_omit_8_runs/
+ayb/corpus and co_occurrence/
+ayb/old_runs
+ayb/summary_plots/
+
 
 # macOS
 .DS_Store
