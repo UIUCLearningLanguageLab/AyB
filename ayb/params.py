@@ -91,7 +91,7 @@ param2default = {
     # Corpus Params
     'num_ab_categories': 2,
     'ab_category_size': 3,
-    'num_omitted_ab_pairs': 0,
+    'num_omitted_ab_pairs': 1,
 
     'x_category_size': 0,
     'y_category_size': 3,
@@ -124,13 +124,13 @@ param2default = {
     'momentum': 0,
     'save_path': 'models/',
     'save_freq': 100,
-    'sequence_length': 1,
+    'sequence_length': 4,
     'num_models': 1,
     'reset_hidden': True,
 
     # SRN & LSTM Params
     'rnn_embedding_size': 0,
-    'rnn_hidden_size': 4,
+    'rnn_hidden_size': 16,
 
 
     # W2V Params
@@ -140,23 +140,23 @@ param2default = {
     'corpus_window_direction': 'both',
 
     # Transformer params
-    'transformer_embedding_size': 32,
-    'transformer_num_heads': 4,
-    'transformer_attention_size': 8,
+    'transformer_embedding_size': 4,
+    'transformer_num_heads': 2,
+    'transformer_attention_size': 4,
     # 'transformer_num_layers': 3,
-    'transformer_hidden_size': 16,
+    'transformer_hidden_size': 4,
     'transformer_target_output': 'single_y',
 
     # Training Params
-    'num_epochs': 10,
+    'num_epochs': 1000,
     'criterion': 'cross_entropy',
     'optimizer': 'adamW',
     'activation_function': 'tanh',
-    'learning_rate': 0.0005,
+    'learning_rate': 0.001,
     'batch_size': 1,
     'dropout_rate': 0.0,
     'l1_lambda': 0.0,
-    'weight_decay': 0.2,
+    'weight_decay': 0.0,
 
     # evaluation params
     'eval_freq': 1,

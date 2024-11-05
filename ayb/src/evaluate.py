@@ -11,6 +11,7 @@ import numpy as np
 
 
 def evaluate_model(label, model, training_corpus, test_corpus, train_params, training_took, loss_mean):
+    # TODO add check to make sure that the model's vocab_list and the corpus_vocab list are the same
 
     evaluation_dict = {'label': label}
 
@@ -76,6 +77,9 @@ def evaluate_model(label, model, training_corpus, test_corpus, train_params, tra
             token_categories.set_instance_feature_matrix(output_weight_matrix, training_corpus.vocab_index_dict)
 
             document_category_lists = test_corpus.assign_categories_to_token_target_sequences(test_corpus.document_list)
+
+
+
             target_categories = SequenceCategories(test_corpus.document_list,
                                                    test_corpus.vocab_index_dict,
                                                    document_category_lists)

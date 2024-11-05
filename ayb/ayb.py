@@ -1,17 +1,16 @@
 import copy
 import os
 import random
-import torch
-
 import pandas as pd
+
 from distributional_models.scripts.visualization import plot_time_series, plot_heat_map
 from distributional_models.corpora.xAyBz import XAYBZ
 from distributional_models.scripts.create_model import create_model
+from distributional_models.custom_dataset import custom_dataset
 # uncomment this following line to run on ludwig
-from ayb.src.evaluate import evaluate_model
-# from src.evaluate import evaluate_model
+#from ayb.src.evaluate import evaluate_model
+from src.evaluate import evaluate_model
 import numpy as np
-from collections import defaultdict
 
 initial_seed = 23
 np.random.seed(initial_seed)
@@ -28,36 +27,49 @@ def run_ayb(param2val, run_location):
         param2val['save_path'] = "../" + param2val['save_path']  # "models/"
 
     # create the corpus
-    training_corpus = XAYBZ(sentence_sequence_rule=param2val['sentence_sequence_rule'],
+    train_corpus = XAYBZ(sentence_sequence_rule=param2val['sentence_sequence_rule'],
                             random_seed=param2val['random_seed'],
                             ab_category_size=param2val['ab_category_size'],
                             num_ab_categories=param2val['num_ab_categories'],
                             num_omitted_ab_pairs=param2val['num_omitted_ab_pairs'])
-    training_corpus.create_corpus()
-    missing_training_words = training_corpus.create_vocab()
+    train_corpus.create_corpus()
+    _ = train_corpus.create_vocab()
 
-    test_corpus = copy.deepcopy(training_corpus)
+    test_corpus = copy.deepcopy(train_corpus)
 
-    if training_corpus.vocab_list != test_corpus.vocab_list:
+    if train_corpus.vocab_list != test_corpus.vocab_list:
         raise Exception("Training and Test Vocab Lists are not the same")
+
+    train_dataset = custom_dataset.CustomDataset()
+    train_dataset.create_types_from_corpus(train_corpus, "x", unknown_token=param2val['unknown_token'])
+    train_dataset.create_types_from_corpus(train_corpus, "y", unknown_token=param2val['unknown_token'])
+    print(train_dataset.num_x, train_dataset.x_list)
+
+
+    test_dataset = copy.deepcopy(train_dataset)
 
     performance_dict = {}
     model_evaluation_list = []
+    the_model = None
     for i in range(param2val['num_models']):
         model_seed = initial_seed + i
-        the_model = create_model(i, training_corpus.vocab_list, param2val)
-        performance_dict, evaluation_dict_list = train_model(param2val, the_model, training_corpus, test_corpus, model_seed)
+        the_model = create_model(i, train_dataset.x_list, param2val)
+        performance_dict, evaluation_dict_list = train_model(param2val, the_model, train_corpus, test_corpus,
+                                                             train_dataset, test_dataset, model_seed)
         model_evaluation_list.append(evaluation_dict_list)
         print(i)
+
     sequence_prediction_df, input_category_similarity_df, output_category_similarity_df, _ = \
         save_data(param2val, model_evaluation_list, param2val['save_path'])
-    plot_data(param2val, the_model.model_type, sequence_prediction_df, input_category_similarity_df,
-              output_category_similarity_df, param2val['save_path'])
+
+    if the_model is not None:
+        plot_data(param2val, the_model.model_type, sequence_prediction_df, input_category_similarity_df,
+                  output_category_similarity_df, param2val['save_path'])
 
     return performance_dict
 
 
-def train_model(train_params, model, training_corpus, test_corpus, seed):
+def train_model(train_params, model, train_corpus, test_corpus, train_dataset, test_dataset, seed):
     performance_dict = {}
     took_sum = 0
     evaluation_dict_list = []
@@ -67,23 +79,17 @@ def train_model(train_params, model, training_corpus, test_corpus, seed):
     for i in range(train_params['num_epochs'] + 1):
         epoch_seed = seed + i
         if train_params['sentence_sequence_rule'] == 'random':
-            temp_document_list = copy.deepcopy(training_corpus.document_list)
+            temp_document_list = copy.deepcopy(train_corpus.document_list)
             for document in temp_document_list:
                 random.seed(epoch_seed)
                 random.shuffle(document)
             training_documents = temp_document_list
         elif train_params['sentence_sequence_rule'] == 'massed':
-            training_documents = copy.deepcopy(training_corpus.document_list)
+            training_documents = copy.deepcopy(train_corpus.document_list)
         else:
             raise Exception(f'invalid sentence_sequence_rule: {train_params["sentence_sequence_rule"]}')
-        # for w2v
-        # loss_mean, took, co_occurrence_table = model.train_sequence(training_corpus, training_documents, train_params, i)
-        # if accumulated_co_occurrence.empty:
-        #     accumulated_co_occurrence = co_occurrence_table
-        # else:
-        #     accumulated_co_occurrence = accumulated_co_occurrence.add(co_occurrence_table, fill_value=0)
-        # for other models
-        loss_mean, took = model.train_sequence(training_corpus, training_documents, train_params)
+
+        loss_mean, took = model.train_sequence(train_dataset, training_documents, train_params)
         took_sum += took
 
         if i <= 100 or (100 < i <= 500 and i % 5 == 0) or (
@@ -93,7 +99,7 @@ def train_model(train_params, model, training_corpus, test_corpus, seed):
             took_mean = took_sum / train_params['eval_freq']
             took_sum = 0
 
-            evaluation_dict = evaluate_model(i, model, training_corpus, test_corpus, train_params, took_mean, loss_mean)
+            evaluation_dict = evaluate_model(i, model, train_corpus, test_corpus, train_params, took_mean, loss_mean)
             print(evaluation_dict['output_string'])
             evaluation_dict_list.append(evaluation_dict)
 
@@ -102,8 +108,9 @@ def train_model(train_params, model, training_corpus, test_corpus, seed):
             model.save_model(train_params['save_path'], file_name)
 
     # for w2v
-    accumulated_co_occurrence.to_csv('/Users/jingfengzhang/FirstYearProject/AyB/ayb/corpus and co_occurrence/'
-                                     'accumulated_co_occurrence_table.csv')
+
+    path = os.path.join(train_params['save_path'], 'accumulated_co_occurrence_table.csv')
+    accumulated_co_occurrence.to_csv(path)
 
     return performance_dict, evaluation_dict_list
 
