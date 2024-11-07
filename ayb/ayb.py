@@ -8,8 +8,8 @@ from distributional_models.corpora.xAyBz import XAYBZ
 from distributional_models.scripts.create_model import create_model
 from distributional_models.custom_dataset import custom_dataset
 # uncomment this following line to run on ludwig
-#from ayb.src.evaluate import evaluate_model
-from src.evaluate import evaluate_model
+from ayb.src.evaluate import evaluate_model
+# from src.evaluate import evaluate_model
 import numpy as np
 
 initial_seed = 23

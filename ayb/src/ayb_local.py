@@ -17,7 +17,7 @@ import math
 
 run_path = Path('../../runs/')
 # run_path = Path('../AdamW_no_omit_runs/runs/')
-selected_param = 'param_001'
+selected_param = 'param_008'
 epoch_evaluated = [f'e{epoch}' for epoch in range(0, 2001, 100)]
 params, corpus, model_dict = load_models(run_path, selected_param, num_models=30, num_epochs=21)
 save_path = os.path.join(run_path, params['save_path'][9:], 'extra_eval')
@@ -131,8 +131,16 @@ final_summary_df.to_csv(save_path+'/summary_dataframe.csv', index=True)
 analysis_df_sum = sum(df.select_dtypes(include='number') for df in similarity_analysis_dfs)
 # Compute the average by dividing by the number of DataFrames
 analysis_df_avg = analysis_df_sum / len(similarity_analysis_dfs)
+
+analysis_df_std = sum((df.select_dtypes(include='number') - analysis_df_avg) ** 2 for df in similarity_analysis_dfs) / (len(similarity_analysis_dfs) - 1)
+analysis_df_std = np.sqrt(analysis_df_std)
+
+# Step 3: Compute the standard error by dividing by the square root of the number of DataFrames
+analysis_df_se = analysis_df_std / np.sqrt(len(similarity_analysis_dfs))
 analysis_df = similarity_analysis_dfs[0].copy()  # Use one of the original DataFrames as a base
 analysis_df.update(analysis_df_avg)
+analysis_df.insert(3, 'A_se', analysis_df_se['A'])
+analysis_df.insert(5, 'B_se', analysis_df_se['B'])
 analysis_df = analysis_df.round(2)
 analysis_df.to_csv(save_path+'/similarity_analysis_df_avg.csv')
 
